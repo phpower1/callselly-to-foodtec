@@ -1,49 +1,120 @@
 import { Request, Response } from "express";
-import axios from "axios";
-
-const apiUrl = process.env.URL_FOODTEC;
-const apiUsername = process.env.USERNAME_FOODTEC;
-const apiPassword = process.env.PASSWORD_FOODTEC;
-const apiAuthToken = Buffer.from(`${apiUsername}:${apiPassword}`).toString("base64");
-export const getDataFromAnotherAPI = async (req: Request, res: Response) => {
-  try {
-    const response = await axios.get("https://api.exemplo.com/endpoint");
-    res.json(response.data);
-  } catch (error) {
-    res.status(500).json({ message: "Erro ao acessar API externa" });
-  }
-};
+import { MenuService } from "../services/menu.service";
+import { OrderValidationService } from "../services/orderValidation.service";
+import { ConfirmOrderService } from "../services/confirmOrder.service";
+import { PhoneService } from "../services/phone.service";
 
 
 export const MenuCategories = async (req: Request, res: Response) => {
-
-  console.log(req.body);
-
-  let { category, items, orderType } = req.body;
-
-  if (orderType == undefined) {
-    orderType = "Delivery";
-  }
-
-  let baseUrl = apiUrl + `/ws/store/v1/menu/categories/${category}?orderType=${orderType}`;
-  console.log(items);
-  if (items) {
-    baseUrl = apiUrl + `/ws/store/v1/menu/categories/${category}/items/${items}?orderType=${orderType}`;
-  }
-  console.log(baseUrl);
+  const menuFoodtec = new MenuService(req, res);
   try {
-    const response = await axios.get(baseUrl,
-      {
-        headers: {
-          Authorization: `Basic ${apiAuthToken}`
-        }
-      }
-    );
-    res.json(response.data);
-  } catch (error) {
-    res.status(500).json({ message: "Erro ao acessar API externa" });
+
+    const result = await menuFoodtec.handle();
+
+    res.json(result);
+
+  } catch (error: any) {
+    console.log(error.response);
+    const errorMessage = error.response
+      ? error.response.data
+      : error.message;
+
+      const resultObject = [
+        {
+          toolCallId: menuFoodtec.vapiId,
+          result: errorMessage,
+        },
+      ];
+      const returnToVapi = {
+        results: resultObject,
+      };
+  
+      console.error("Detalhes do erro:", errorMessage);
+  
+      res.status(error.response.status).json(returnToVapi);
   }
 };
 
 
 
+export const orderValidate = async (req: Request, res: Response) => {
+  const validateFoodtec = new OrderValidationService(req, res);
+  try {
+
+    const result = await validateFoodtec.handle();
+
+    res.json(result);
+
+  } catch (error: any) {
+    console.log(error.response);
+    const errorMessage = error.response
+      ? error.response.data
+      : error.message;
+
+    const resultObject = [
+      {
+        toolCallId: validateFoodtec.vapiId,
+        result: errorMessage,
+      },
+    ];
+    const returnToVapi = {
+      results: resultObject,
+    };
+
+    console.error("Detalhes do erro:", errorMessage);
+
+    res.status(error.response.status).json(returnToVapi);
+  }
+};
+
+export const confirmOrder = async (req: Request, res: Response) => {
+  const confirmOrder = new ConfirmOrderService(req, res);
+  try {
+
+    const result = await confirmOrder.handle();
+
+    res.json(result);
+
+  } catch (error: any) {
+    console.log(error.response);
+    const errorMessage = error.response
+      ? error.response.data
+      : error.message;
+
+    const resultObject = [
+      {
+        toolCallId: confirmOrder.vapiId,
+        result: errorMessage,
+      },
+    ];
+    const returnToVapi = {
+      results: resultObject,
+    };
+
+    console.error("Detalhes do erro:", errorMessage);
+
+    res.status(error.response.status).json(returnToVapi);
+  }
+};
+
+
+export const formatPhone = async (req: Request, res: Response) => {
+  try {
+    const menuFoodtec = new PhoneService(req, res);
+
+    const result = await menuFoodtec.handle();
+
+    res.json(result);
+
+  } catch (error: any) {
+    console.log(error.response);
+    const errorMessage = error.response
+      ? error.response.data
+      : error.message;
+
+    console.error("Detalhes do erro:", errorMessage);
+
+    res.status(error.response.status).json({ data: errorMessage });
+  }
+
+};

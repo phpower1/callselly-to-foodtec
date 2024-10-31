@@ -1,9 +1,11 @@
-import { Router, Request, Response } from "express";
-import { MenuCategories, getDataFromAnotherAPI } from "../controllers/apiController";
+import { Router } from "express";
+import { confirmOrder, formatPhone, MenuCategories, orderValidate } from "../controllers/apiController";
 
 const router: Router = Router();
 
-router.get("/data", getDataFromAnotherAPI);
-router.get("/menu/categories", MenuCategories);
+router.post("/menu/categories", MenuCategories);
+router.post("/order/validate", orderValidate);
+router.post("/order/confirm", confirmOrder);
+router.post("/customer/format-phone", formatPhone);
 
 export default router;
